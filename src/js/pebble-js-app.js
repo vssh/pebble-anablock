@@ -12,6 +12,8 @@ var HAIL = 10;
 var CLOUDY = 11;
 var STORM = 12;
 var NA = 13;
+var GPS = 14;
+var BLANK = 15;
 
 var imageId = {
   0 : STORM, //tornado
@@ -65,11 +67,18 @@ var imageId = {
   3200 : NA, //not available
 };
 
+var locationOptions = { "timeout": 15000, "maximumAge": 60000 };
+
 var options = JSON.parse(localStorage.getItem('options'));
 //console.log('read options: ' + JSON.stringify(options));
 if (options === null) options = { "use_gps" : "true",
                                   "location" : "",
-                                  "units" : "fahrenheit"};
+                                  "units" : "celcius",
+                                  "shake" : "true",
+                                  "analog" : "false"};
+
+var weather = JSON.parse(localStorage.getItem('weather'));
+if(weather === null) weather = {icon: NA, temperature: "", timestamp: 0};
 
 function getWeatherFromLatLong(latitude, longitude) {
   var response;
@@ -90,7 +99,7 @@ function getWeatherFromLatLong(latitude, longitude) {
         console.log("Error");
       }
     }
-  }
+  };
   req.send(null);
 }
 
@@ -115,12 +124,12 @@ function getWeatherFromLocation(location_name) {
         console.log("Error");
       }
     }
-  }
+  };
   req.send(null);
 }
 
 function getWeatherFromWoeid(woeid) {
-  var celsius = options['units'] == 'celsius';
+  var celsius = options.units == 'celsius';
   var query = encodeURI("select item.condition from weather.forecast where woeid = " + woeid +
                         " and u = " + (celsius ? "\"c\"" : "\"f\""));
   var url = "http://query.yahooapis.com/v1/public/yql?q=" + query + "&format=json";
@@ -134,11 +143,15 @@ function getWeatherFromWoeid(woeid) {
         response = JSON.parse(req.responseText);
         if (response) {
           var condition = response.query.results.channel.item.condition;
-          temperature = condition.temp + (celsius ? "C" : "F");
-          icon = imageId[condition.code];
+          var temperature = condition.temp + (celsius ? "C" : "F");
+          var icon = imageId[condition.code];
           // console.log("temp " + temperature);
           // console.log("icon " + icon);
           // console.log("condition " + condition.text);
+          weather.icon = icon;
+          weather.temperature = temperature;
+          weather.timestamp = Math.floor(Date.now() / 1000);
+          localStorage.setItem('weather', JSON.stringify(weather));
           Pebble.sendAppMessage({
             "icon" : icon,
             "temperature" : temperature
@@ -148,21 +161,20 @@ function getWeatherFromWoeid(woeid) {
         console.log("Error");
       }
     }
-  }
+  };
   req.send(null);
 }
 
 function updateWeather() {
-  if (options['use_gps'] == "true") {
+  if (options.use_gps == "true") {
     window.navigator.geolocation.getCurrentPosition(locationSuccess,
                                                     locationError,
                                                     locationOptions);
   } else {
-    getWeatherFromLocation(options["location"]);
+    getWeatherFromLocation(options.location);
   }
+  console.log("weather updated");
 }
-
-var locationOptions = { "timeout": 15000, "maximumAge": 60000 };
 
 function locationSuccess(pos) {
   var coordinates = pos.coords;
@@ -172,16 +184,18 @@ function locationSuccess(pos) {
 function locationError(err) {
   console.warn('location error (' + err.code + '): ' + err.message);
   Pebble.sendAppMessage({
-    "icon":13,
-    "temperature":""
+    "icon": GPS,
+    "temperature": "X"
   });
 }
 
 Pebble.addEventListener('showConfiguration', function(e) {
   var uri = 'http://tallerthenyou.github.io/simplicity-with-day/configuration.html?' +
-    'use_gps=' + encodeURIComponent(options['use_gps']) +
-    '&location=' + encodeURIComponent(options['location']) +
-    '&units=' + encodeURIComponent(options['units']));
+    'use_gps=' + encodeURIComponent(options.use_gps) +
+    '&location=' + encodeURIComponent(options.location) +
+    '&units=' + encodeURIComponent(options.units) +
+    '&shake' + encodeURIComponent(options.shake) +
+    '&analog' + encodeURIComponent(options.face);
   //console.log('showing configuration at uri: ' + uri);
 
   Pebble.openURL(uri);
@@ -192,6 +206,10 @@ Pebble.addEventListener('webviewclosed', function(e) {
     options = JSON.parse(decodeURIComponent(e.response));
     localStorage.setItem('options', JSON.stringify(options));
     //console.log('storing options: ' + JSON.stringify(options));
+    Pebble.sendAppMessage({
+            "shake" : options.shake,
+            "analog" : options.face
+          });
     updateWeather();
   } else {
     console.log('no options received');
@@ -200,7 +218,15 @@ Pebble.addEventListener('webviewclosed', function(e) {
 
 Pebble.addEventListener("ready", function(e) {
   //console.log("connect!" + e.ready);
-  updateWeather();
+  if (weather.timestamp < Math.floor(Date.now() / 1000) - 1800 || weather.icon === NA || weather.icon === GPS || weather.temperature ==="") {
+    updateWeather();    
+  }
+  else {
+    Pebble.sendAppMessage({
+            "icon" : weather.icon,
+            "temperature" : weather.temperature
+          });
+  }
   setInterval(function() {
     //console.log("timer fired");
     updateWeather();
