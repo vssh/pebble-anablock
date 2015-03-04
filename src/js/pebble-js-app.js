@@ -190,12 +190,12 @@ function locationError(err) {
 }
 
 Pebble.addEventListener('showConfiguration', function(e) {
-  var uri = 'http://tallerthenyou.github.io/simplicity-with-day/configuration.html?' +
+  var uri = 'http://vssh.github.io/pebble-digilog/config.html?' +
     'use_gps=' + encodeURIComponent(options.use_gps) +
     '&location=' + encodeURIComponent(options.location) +
     '&units=' + encodeURIComponent(options.units) +
-    '&shake' + encodeURIComponent(options.shake) +
-    '&analog' + encodeURIComponent(options.face);
+    '&shake=' + encodeURIComponent(options.shake) +
+    '&analog=' + encodeURIComponent(options.analog);
   //console.log('showing configuration at uri: ' + uri);
 
   Pebble.openURL(uri);
@@ -205,10 +205,10 @@ Pebble.addEventListener('webviewclosed', function(e) {
   if (e.response) {
     options = JSON.parse(decodeURIComponent(e.response));
     localStorage.setItem('options', JSON.stringify(options));
-    //console.log('storing options: ' + JSON.stringify(options));
+    console.log('storing options: ' + JSON.stringify(options));
     Pebble.sendAppMessage({
             "shake" : options.shake,
-            "analog" : options.face
+            "analog" : options.analog
           });
     updateWeather();
   } else {

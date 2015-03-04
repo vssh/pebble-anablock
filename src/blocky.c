@@ -26,6 +26,7 @@ TextLayer *text_bt_layer;
 TextLayer *text_bat_layer;
 
 GFont meteocons;
+GFont bat;
 GFont imagine_15;
 GFont imagine_58;
 
@@ -82,9 +83,6 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 // battery
 void update_battery_state(BatteryChargeState battery_state) {
   if(battery_state.charge_percent <= 20) {
-    static char battery_text[] = "BT20";
-    snprintf(battery_text, sizeof(battery_text), "BT%d", battery_state.charge_percent);
-    text_layer_set_text(text_bat_layer, battery_text);
     layer_set_hidden((Layer *)text_bat_layer, false);
     vibes_short_pulse();
   }  
@@ -229,7 +227,8 @@ void handle_init(void) {
   weather_holder = layer_create(GRect(96, 0, 48, 56));
   layer_add_child(window_layer, weather_holder);
   
-  meteocons = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_METEOCONS_30));
+  meteocons = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_METEOBATT_30));
+  bat = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_METEOBATT_15));
   imagine_15 = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_IMAGINE_15));
   imagine_58 = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_IMAGINE_58));
   
@@ -316,18 +315,19 @@ void handle_init(void) {
   bt_holder = layer_create(GRect(0, 56, 48, 56));
   layer_add_child(window_layer, bt_holder);
   
-  text_bt_layer = text_layer_create(GRect(1, 3, 46, 23));
+  text_bt_layer = text_layer_create(GRect(1, 5, 46, 21));
   text_layer_set_text_color(text_bt_layer, GColorWhite);
   text_layer_set_background_color(text_bt_layer, GColorClear);
-  text_layer_set_font(text_bt_layer, imagine_15);
-  text_layer_set_text(text_bt_layer, "BT X");
+  text_layer_set_font(text_bt_layer, bat);
+  text_layer_set_text(text_bt_layer, "s");
   layer_set_hidden((Layer *)text_bt_layer, true);
   layer_add_child(bt_holder, text_layer_get_layer(text_bt_layer));
   
-  text_bat_layer = text_layer_create(GRect(1, 30, 46, 23));
+  text_bat_layer = text_layer_create(GRect(1, 32, 46, 21));
   text_layer_set_text_color(text_bat_layer, GColorWhite);
   text_layer_set_background_color(text_bat_layer, GColorClear);
-  text_layer_set_font(text_bat_layer, imagine_15);
+  text_layer_set_font(text_bat_layer, bat);
+  text_layer_set_text(text_bat_layer, "r");
   layer_set_hidden((Layer *)text_bat_layer, true);
   layer_add_child(bt_holder, text_layer_get_layer(text_bat_layer)); 
   
@@ -358,7 +358,9 @@ void handle_init(void) {
   
   Tuplet initial_values[] = {
     TupletInteger(WEATHER_ICON_KEY, 15),
-    TupletCString(WEATHER_TEMPERATURE_KEY, "")
+    TupletCString(WEATHER_TEMPERATURE_KEY, ""),
+    TupletCString(SHAKE_KEY, "true"),
+    TupletCString(ANALOG_KEY, "false")
   };
 
   app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values,

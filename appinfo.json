@@ -10,25 +10,19 @@
         "configurable"
     ],
     "companyName": "v",
-    "longName": "Digilog",
+    "longName": "Anablock",
     "projectType": "native",
     "resources": {
         "media": [
             {
-                "file": "images/screenshot-20150304153828.png",
-                "menuIcon": true,
-                "name": "IMAGE_LOGO",
-                "type": "png"
-            },
-            {
-                "characterRegex": "[1-8FGM#$%()]",
-                "file": "fonts/meteocons-webfont.ttf",
-                "name": "METEOCONS_30",
+                "characterRegex": "[rs]",
+                "file": "fonts/meteobatt.ttf",
+                "name": "METEOBATT_15",
                 "type": "font"
             },
             {
-                "file": "fonts/imagine_font.ttf",
-                "name": "FONT_IMAGINE_15",
+                "file": "fonts/meteobatt.ttf",
+                "name": "METEOBATT_30",
                 "type": "font"
             },
             {
@@ -36,11 +30,16 @@
                 "file": "fonts/imagine_font.ttf",
                 "name": "FONT_IMAGINE_58",
                 "type": "font"
+            },
+            {
+                "file": "fonts/imagine_font.ttf",
+                "name": "FONT_IMAGINE_15",
+                "type": "font"
             }
         ]
     },
     "sdkVersion": "2",
-    "shortName": "Digilog",
+    "shortName": "Anablock",
     "uuid": "046577a1-a15f-45a1-9c0e-f08babf68bbc",
     "versionCode": 1,
     "versionLabel": "1.0",
