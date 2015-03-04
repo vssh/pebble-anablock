@@ -1,0 +1,42 @@
+{
+    "appKeys": {
+        "icon": 0,
+        "invert_color": 2,
+        "temperature": 1
+    },
+    "capabilities": [
+        "location"
+    ],
+    "companyName": "v",
+    "longName": "facey",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "characterRegex": "[1-8FGM#$%()]",
+                "file": "fonts/meteocons-webfont.ttf",
+                "name": "METEOCONS_30",
+                "type": "font"
+            },
+            {
+                "file": "fonts/imagine_font.ttf",
+                "name": "FONT_IMAGINE_15",
+                "type": "font"
+            },
+            {
+                "characterRegex": "[0-9]",
+                "file": "fonts/imagine_font.ttf",
+                "name": "FONT_IMAGINE_58",
+                "type": "font"
+            }
+        ]
+    },
+    "sdkVersion": "2",
+    "shortName": "facey",
+    "uuid": "046577a1-a15f-45a1-9c0e-f08babf68bbc",
+    "versionCode": 1,
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": true
+    }
+}
