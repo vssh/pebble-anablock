@@ -119,6 +119,12 @@
         });
         
         $('#shake').val(getQueryVariable('shake')).change();
+        
+        if (getQueryVariable('analog') == "true") {
+          $('input:radio[name=face][value=yes]').prop('checked', true).trigger("click");
+        } else {
+          $('input:radio[name=face][value=no]').prop('checked', true).trigger("click");
+        }
         // Disable face field based on shake toggle
         $('#digital').prop('disabled', $('#shake').val() == "true");
         $('#analog').prop('disabled', $('#shake').val() == "true");
