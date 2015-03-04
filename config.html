@@ -58,10 +58,10 @@
             <legend>Face (when shake to switch is disabled):</legend>
 
             <label for="digital">Digital</label>
-            <input type="radio" id="digital" name="face" value="no" data-theme="c">
+            <input type="radio" id="digital" name="face" value="false" data-theme="c">
 
             <label for="analog">Analog</label>
-            <input type="radio" id="analog" name="face" value="yes" data-theme="c">
+            <input type="radio" id="analog" name="face" value="true" data-theme="c">
           </fieldset>
         </div>
 
@@ -121,9 +121,9 @@
         $('#shake').val(getQueryVariable('shake')).change();
         
         if (getQueryVariable('analog') == "true") {
-          $('input:radio[name=face][value=yes]').prop('checked', true).trigger("click");
+          $('input:radio[name=face][value=true]').prop('checked', true).trigger("click");
         } else {
-          $('input:radio[name=face][value=no]').prop('checked', true).trigger("click");
+          $('input:radio[name=face][value=false]').prop('checked', true).trigger("click");
         }
         // Disable face field based on shake toggle
         $('#digital').prop('disabled', $('#shake').val() == "true");
