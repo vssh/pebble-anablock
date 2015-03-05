@@ -71,11 +71,14 @@ var locationOptions = { "timeout": 15000, "maximumAge": 60000 };
 
 var options = JSON.parse(localStorage.getItem('options'));
 //console.log('read options: ' + JSON.stringify(options));
-if (options === null) options = { "use_gps" : "true",
+if (options === null || Object.keys(options).length < 7) options = { "use_gps" : "true",
                                   "location" : "",
                                   "units" : "celcius",
+                                  "update_time" : "60",
                                   "shake" : "true",
-                                  "analog" : "false"};
+                                  "analog" : "false",                                 
+                                  "strip" : "true"};
+//console.log("options length="+Object.keys(options).length);
 
 var weather = JSON.parse(localStorage.getItem('weather'));
 if(weather === null) weather = {icon: NA, temperature: "", timestamp: 0};
@@ -173,7 +176,7 @@ function updateWeather() {
   } else {
     getWeatherFromLocation(options.location);
   }
-  console.log("weather updated");
+  //console.log("weather updated");
 }
 
 function locationSuccess(pos) {
@@ -190,12 +193,14 @@ function locationError(err) {
 }
 
 Pebble.addEventListener('showConfiguration', function(e) {
-  var uri = 'http://vssh.github.io/pebble-digilog/config.html?' +
+  var uri = 'http://vssh.github.io/pebble-anablock/config.html?' +
     'use_gps=' + encodeURIComponent(options.use_gps) +
     '&location=' + encodeURIComponent(options.location) +
     '&units=' + encodeURIComponent(options.units) +
+    '&update_time=' + encodeURIComponent(options.update_time) +
     '&shake=' + encodeURIComponent(options.shake) +
-    '&analog=' + encodeURIComponent(options.analog);
+    '&analog=' + encodeURIComponent(options.analog) +
+    '&strip=' + encodeURIComponent(options.strip);
   //console.log('showing configuration at uri: ' + uri);
 
   Pebble.openURL(uri);
@@ -208,17 +213,18 @@ Pebble.addEventListener('webviewclosed', function(e) {
     console.log('storing options: ' + JSON.stringify(options));
     Pebble.sendAppMessage({
             "shake" : options.shake,
-            "analog" : options.analog
+            "analog" : options.analog,
+            "strip" : options.strip
           });
     updateWeather();
   } else {
-    console.log('no options received');
+    //console.log('no options received');
   }
 });
 
 Pebble.addEventListener("ready", function(e) {
   //console.log("connect!" + e.ready);
-  if (weather.timestamp < Math.floor(Date.now() / 1000) - 1800 || weather.icon === NA || weather.icon === GPS || weather.temperature ==="") {
+  if (weather.timestamp < Math.floor(Date.now() / 1000) - parseInt(options.update_time)*60/2 || weather.icon === NA || weather.icon === GPS || weather.temperature ==="") {
     updateWeather();    
   }
   else {
@@ -230,6 +236,6 @@ Pebble.addEventListener("ready", function(e) {
   setInterval(function() {
     //console.log("timer fired");
     updateWeather();
-  }, 1800000); // 30 minutes
+  }, parseInt(options.update_time)*60*1000); // 30 minutes
   console.log(e.type);
 });

@@ -3,6 +3,7 @@
         "analog": 3,
         "icon": 0,
         "shake": 2,
+        "strip": 4,
         "temperature": 1
     },
     "capabilities": [
@@ -15,14 +16,8 @@
     "resources": {
         "media": [
             {
-                "characterRegex": "[rs]",
-                "file": "fonts/meteobatt.ttf",
-                "name": "METEOBATT_15",
-                "type": "font"
-            },
-            {
-                "file": "fonts/meteobatt.ttf",
-                "name": "METEOBATT_30",
+                "file": "fonts/imagine_font.ttf",
+                "name": "FONT_IMAGINE_15",
                 "type": "font"
             },
             {
@@ -32,8 +27,14 @@
                 "type": "font"
             },
             {
-                "file": "fonts/imagine_font.ttf",
-                "name": "FONT_IMAGINE_15",
+                "file": "fonts/meteobatt.ttf",
+                "name": "METEOBATT_30",
+                "type": "font"
+            },
+            {
+                "characterRegex": "[rs]",
+                "file": "fonts/meteobatt.ttf",
+                "name": "METEOBATT_15",
                 "type": "font"
             }
         ]
@@ -42,7 +43,7 @@
     "shortName": "Anablock",
     "uuid": "046577a1-a15f-45a1-9c0e-f08babf68bbc",
     "versionCode": 1,
-    "versionLabel": "1.0",
+    "versionLabel": "1.2",
     "watchapp": {
         "watchface": true
     }

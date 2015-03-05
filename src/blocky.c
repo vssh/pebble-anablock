@@ -32,6 +32,7 @@ GFont imagine_58;
 
 bool analog = false;
 bool shake = true;
+bool strip = true;
 static int yday = -1;
 
 InverterLayer *inverter_strip = NULL;
@@ -187,6 +188,7 @@ static void sync_tuple_changed_callback(const uint32_t key,
                                         const Tuple* old_tuple,
                                         void* context) {
   bool old_shake = shake;
+  bool old_strip = strip;
 
   // App Sync keeps new_tuple in sync_buffer, so we may use it directly
   switch (key) {
@@ -208,8 +210,27 @@ static void sync_tuple_changed_callback(const uint32_t key,
     case ANALOG_KEY:
       analog = strcmp(new_tuple->value->cstring, "true") == 0 ? true : false;
       switch_analog_digital();
-      break;      
+      break;
+    
+    case INVERT_STRIP_KEY:
+      strip = strcmp(new_tuple->value->cstring, "true") == 0 ? true : false;
+      if (strip != old_strip) {
+        if (strip == true){
+          inverter_strip = inverter_layer_create(GRect(96, 0, 48, 168));
+          layer_add_child(window_layer, inverter_layer_get_layer(inverter_strip));
+        }
+        else {
+          layer_remove_from_parent((Layer*)inverter_strip);
+          inverter_layer_destroy(inverter_strip);
+        }
+      }
+      
+      break;
   }
+}
+
+char* boolToString(bool b) {
+  return b == true ? "true" : "false";
 }
 
 void handle_init(void) {
@@ -222,6 +243,7 @@ void handle_init(void) {
   
   analog = persist_exists(ANALOG_KEY) ? persist_read_bool(ANALOG_KEY) : false;
   shake = persist_exists(SHAKE_KEY) ? persist_read_bool(SHAKE_KEY) : true;
+  strip = persist_exists(INVERT_STRIP_KEY) ? persist_read_bool(INVERT_STRIP_KEY) : true;
 
   // Setup weather bar
   weather_holder = layer_create(GRect(96, 0, 48, 56));
@@ -348,9 +370,11 @@ void handle_init(void) {
 
   
   // Inverter strip
-  inverter_strip = inverter_layer_create(GRect(96, 0, 48, 168));
-  layer_add_child(window_layer, inverter_layer_get_layer(inverter_strip));
-
+  if (strip == true){
+    inverter_strip = inverter_layer_create(GRect(96, 0, 48, 168));
+    layer_add_child(window_layer, inverter_layer_get_layer(inverter_strip));
+  }
+  
   // Setup messaging
   const int inbound_size = 64;
   const int outbound_size = 64;
@@ -359,8 +383,9 @@ void handle_init(void) {
   Tuplet initial_values[] = {
     TupletInteger(WEATHER_ICON_KEY, 15),
     TupletCString(WEATHER_TEMPERATURE_KEY, ""),
-    TupletCString(SHAKE_KEY, "true"),
-    TupletCString(ANALOG_KEY, "false")
+    TupletCString(SHAKE_KEY, boolToString(shake)),
+    TupletCString(ANALOG_KEY, boolToString(analog)),
+    TupletCString(INVERT_STRIP_KEY, boolToString(strip))
   };
 
   app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values,
@@ -392,6 +417,7 @@ void handle_deinit(void) {
   
   persist_write_bool(ANALOG_KEY, analog);
   persist_write_bool(SHAKE_KEY, shake);
+  persist_write_bool(INVERT_STRIP_KEY, strip);
   
   fonts_unload_custom_font(meteocons);
   fonts_unload_custom_font(imagine_15);
@@ -400,7 +426,26 @@ void handle_deinit(void) {
   gpath_destroy(s_minute_arrow);
   gpath_destroy(s_hour_arrow);
   
-  /*text_layer_destroy(icon_layer);
+  /*layer_remove_from_parent((Layer*)icon_layer);
+  layer_remove_from_parent((Layer*)text_temp_layer);
+  layer_remove_from_parent((Layer*)text_hour1_layer);
+  layer_remove_from_parent((Layer*)text_hour2_layer);
+  layer_remove_from_parent((Layer*)text_min1_layer);
+  layer_remove_from_parent((Layer*)text_min2_layer);
+  layer_remove_from_parent((Layer*)text_date1_layer);
+  layer_remove_from_parent((Layer*)text_date2_layer);
+  layer_remove_from_parent((Layer*)text_day_layer);
+  layer_remove_from_parent((Layer*)text_month_layer);
+  layer_remove_from_parent((Layer*)text_bt_layer);
+  layer_remove_from_parent((Layer*)text_bat_layer);
+  layer_remove_from_parent((Layer*)weather_holder);
+  layer_remove_from_parent((Layer*)day_holder);
+  layer_remove_from_parent((Layer*)bt_holder);
+  layer_remove_from_parent((Layer*)s_digits_layer);
+  layer_remove_from_parent((Layer*)s_hands_layer);
+  layer_remove_from_parent((Layer*)window_layer);
+  
+  text_layer_destroy(icon_layer);
   text_layer_destroy(text_temp_layer);
   text_layer_destroy(text_hour1_layer);
   text_layer_destroy(text_hour2_layer);
@@ -416,8 +461,9 @@ void handle_deinit(void) {
   layer_destroy(weather_holder);
   layer_destroy(day_holder);
   layer_destroy(bt_holder);
-  layer_destroy(window_layer);
-  layer_destroy(s_hands_layer)*/
+  layer_destroy(s_digits_layer);  
+  layer_destroy(s_hands_layer);
+  layer_destroy(window_layer);*/
   
   window_destroy(window);
 }
