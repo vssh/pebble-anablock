@@ -4,7 +4,9 @@
         "icon": 0,
         "shake": 2,
         "strip": 4,
-        "temperature": 1
+        "temperature": 1,
+        "updatenow": 6,
+        "updatetime": 5
     },
     "capabilities": [
         "location",

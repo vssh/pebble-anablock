@@ -33,6 +33,7 @@ GFont imagine_58;
 bool analog = false;
 bool shake = true;
 bool strip = true;
+int update_time = 60;
 static int yday = -1;
 
 InverterLayer *inverter_strip = NULL;
@@ -47,11 +48,22 @@ static char date2[] = "0";
 static char date_text[] = "00";
 static char day_text[] = "xxx";
 static char month_text[] = "xxx";
+static int weather_icon = 15;
+static char *weather_temp = "0";
+static int weather_timestamp = 0;
 
 TextLayer *battery_text_layer;
 
 static AppSync sync;
-static uint8_t sync_buffer[64];
+static uint8_t sync_buffer[96];
+
+char* boolToString(bool b) {
+  return b == true ? "true" : "false";
+}
+
+int boolToInt(bool b) {
+  return b == true ? 1 : 0;
+}
 
 void bluetooth_connection_changed(bool connected) {
   static bool _connected = true;
@@ -65,20 +77,6 @@ void bluetooth_connection_changed(bool connected) {
     layer_set_hidden((Layer *)text_bt_layer, true); 
   }
   _connected = connected;
-}
-
-void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
-  if(analog == false) {
-    layer_mark_dirty(s_digits_layer);
-  }
-  else {
-    layer_mark_dirty(s_hands_layer);
-  }  
-  // Only update the date when it has changed.
-  if (yday != tick_time->tm_yday) {
-    layer_mark_dirty((Layer*)day_holder);
-    yday = tick_time->tm_yday;
-  }
 }
 
 // battery
@@ -111,7 +109,7 @@ void switch_analog_digital() {
     layer_set_hidden((Layer*)text_min2_layer, false);
     layer_set_hidden((Layer*)text_date1_layer, false);
     layer_set_hidden((Layer*)text_date2_layer, false); 
-    layer_mark_dirty(s_digits_layer);    
+    layer_mark_dirty(s_digits_layer);
   }
   layer_mark_dirty((Layer*)day_holder);
 }
@@ -137,26 +135,30 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
   gpath_draw_outline(ctx, s_minute_arrow);
 }
 
-static void digits_update_proc(Layer *layer, GContext *ctx) {  
+static void digits_update_proc(Layer *layer, GContext *ctx) {
   time_t now = time(NULL);
   struct tm *t = localtime(&now);
   
   char *time_format;
   if (clock_is_24h_style()) {
     time_format = "%R";
-    } else {
-      time_format = "%I:%M";
-    }
+  }
+  else {
+    time_format = "%I:%M";
+  }
   
+  char* time_text_old = NULL;
+  strcpy(time_text_old, time_text);
   strftime(time_text, sizeof(time_text), time_format, t);
-
-  strncpy(hour1, time_text, 1);
-  strncpy(hour2, time_text+1, 1);
+    
+  if(strncmp(time_text, time_text_old, 2)!=0) {
+    strncpy(hour1, time_text, 1);
+    strncpy(hour2, time_text+1, 1);
+    text_layer_set_text(text_hour1_layer, hour1);
+    text_layer_set_text(text_hour2_layer, hour2);
+  }      
   strncpy(min1, time_text+3, 1);
-  strncpy(min2, time_text+4, 1);    
-
-  text_layer_set_text(text_hour1_layer, hour1);
-  text_layer_set_text(text_hour2_layer, hour2);
+  strncpy(min2, time_text+4, 1);
   text_layer_set_text(text_min1_layer, min1);
   text_layer_set_text(text_min2_layer, min2);
 }
@@ -183,24 +185,68 @@ static void day_update_proc(Layer *layer, GContext *ctx) {
   text_layer_set_text(text_day_layer, day_text);
 }
 
+void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
+  if(analog == false) {
+    digits_update_proc(NULL, NULL);
+    //layer_mark_dirty(s_digits_layer);
+  }
+  else {    
+    layer_mark_dirty(s_hands_layer);
+  }  
+  // Only update the date when it has changed.
+  if (yday != tick_time->tm_yday) {
+    layer_mark_dirty((Layer*)day_holder);
+    yday = tick_time->tm_yday;
+  }
+  
+  int time_now = tick_time->tm_mday*24*60 + tick_time->tm_hour*60 + tick_time->tm_min;
+  //APP_LOG(0, "time_now: %d", time_now);
+  //APP_LOG(0, "weather_timestamp: %d", weather_timestamp);
+  //APP_LOG(0, "update_time: %d", update_time);
+  //APP_LOG(0, "weather_icon: %d", weather_icon);
+  //APP_LOG(0, "weather_temp: %s", weather_temp);
+  if(time_now - weather_timestamp > update_time || time_now < weather_timestamp || strcmp(weather_temp, "") == 0 || weather_icon > 12){
+  //if(time_now - weather_timestamp > 30 || time_now < weather_timestamp || weather_icon > 12){    
+    Tuplet new_values[] = {
+      TupletCString(UPDATE_NOW, boolToString(false))
+    };
+    app_sync_set(&sync, new_values, ARRAY_LENGTH(new_values));
+  }
+  /*else {
+    text_layer_set_text(icon_layer, WEATHER_ICONS[weather_icon]);
+    text_layer_set_text(text_temp_layer, weather_temp);
+  }*/
+}
+
 static void sync_tuple_changed_callback(const uint32_t key,
                                         const Tuple* new_tuple,
                                         const Tuple* old_tuple,
                                         void* context) {
   bool old_shake = shake;
   bool old_strip = strip;
+  time_t now = time(NULL);
+  struct tm *t = localtime(&now);
 
   // App Sync keeps new_tuple in sync_buffer, so we may use it directly
   switch (key) {
     case WEATHER_ICON_KEY:
-      text_layer_set_text(icon_layer, WEATHER_ICONS[new_tuple->value->uint8]);
+      //APP_LOG(0, "IN WEATHER ICON KEY");
+      if(weather_icon != new_tuple->value->uint8) {
+        weather_icon = new_tuple->value->uint8;
+        text_layer_set_text(icon_layer, WEATHER_ICONS[weather_icon]);
+      }      
       break;
 
     case WEATHER_TEMPERATURE_KEY:
-      text_layer_set_text(text_temp_layer, new_tuple->value->cstring);
+      //APP_LOG(0, "IN WEATHER TEMPERATURE KEY");
+      if(strcmp(weather_temp, new_tuple->value->cstring) != 0) {
+        strcpy(weather_temp, new_tuple->value->cstring);
+        text_layer_set_text(text_temp_layer, weather_temp);
+      }      
       break;
     
-    case SHAKE_KEY:      
+    case SHAKE_KEY:
+      //APP_LOG(0, "IN SHAKE KEY");
       shake = strcmp(new_tuple->value->cstring, "true") == 0 ? true : false;
       if(shake != old_shake) {
         shake == true ? accel_tap_service_subscribe(wrist_flick_handler) : accel_tap_service_unsubscribe();
@@ -208,11 +254,13 @@ static void sync_tuple_changed_callback(const uint32_t key,
       break;
     
     case ANALOG_KEY:
+      //APP_LOG(0, "IN ANALOG KEY");
       analog = strcmp(new_tuple->value->cstring, "true") == 0 ? true : false;
       switch_analog_digital();
       break;
     
     case INVERT_STRIP_KEY:
+      //APP_LOG(0, "IN INVERT STRIP KEY");
       strip = strcmp(new_tuple->value->cstring, "true") == 0 ? true : false;
       if (strip != old_strip) {
         if (strip == true){
@@ -223,28 +271,43 @@ static void sync_tuple_changed_callback(const uint32_t key,
           layer_remove_from_parent((Layer*)inverter_strip);
           inverter_layer_destroy(inverter_strip);
         }
-      }
+      }      
+      break;
       
+    case UPDATE_TIME_KEY:
+      //APP_LOG(0, "IN UPDATE TIME KEY");
+      update_time = new_tuple->value->uint8;
+      break;
+    
+    case UPDATE_NOW:
+      //APP_LOG(0, "IN UPDATE NOW: %s", new_tuple->value->cstring);
+      if(strcmp(new_tuple->value->cstring, "true") == 0) {
+        weather_timestamp = t->tm_mday*24*60 + t->tm_hour*60 + t->tm_min;
+      }
       break;
   }
 }
 
-char* boolToString(bool b) {
-  return b == true ? "true" : "false";
-}
-
 void handle_init(void) {
+  
+  analog = persist_exists(ANALOG_KEY) ? persist_read_bool(ANALOG_KEY) : false;
+  shake = persist_exists(SHAKE_KEY) ? persist_read_bool(SHAKE_KEY) : true;
+  strip = persist_exists(INVERT_STRIP_KEY) ? persist_read_bool(INVERT_STRIP_KEY) : true;
+  /*weather_icon = persist_exists(WEATHER_ICON_KEY) ? persist_read_int(WEATHER_ICON_KEY) : 15;
+  if(persist_exists(WEATHER_TEMPERATURE_KEY)) {
+    persist_read_string(WEATHER_TEMPERATURE_KEY, weather_temp, sizeof(weather_temp));
+  }*/
+  //APP_LOG(0, "temp after persist get: %s", weather_temp);
+  weather_timestamp = persist_exists(LAST_UPDATE_TIME) ? persist_read_int(LAST_UPDATE_TIME) : 0;
+  update_time = persist_exists(UPDATE_TIME_KEY) ? persist_read_int(UPDATE_TIME_KEY) : 60;
+  
   window = window_create();
   window_stack_push(window, true /* Animated */);
   window_set_background_color(window, GColorBlack);
 
   window_layer = window_get_root_layer(window);
-  GRect bounds = layer_get_bounds(window_layer);
+  GRect bounds = layer_get_bounds(window_layer);  
   
-  analog = persist_exists(ANALOG_KEY) ? persist_read_bool(ANALOG_KEY) : false;
-  shake = persist_exists(SHAKE_KEY) ? persist_read_bool(SHAKE_KEY) : true;
-  strip = persist_exists(INVERT_STRIP_KEY) ? persist_read_bool(INVERT_STRIP_KEY) : true;
-
   // Setup weather bar
   weather_holder = layer_create(GRect(96, 0, 48, 56));
   layer_add_child(window_layer, weather_holder);
@@ -288,8 +351,8 @@ void handle_init(void) {
   
   // Initialize time
   s_digits_layer = layer_create(bounds);
-  layer_set_update_proc(s_digits_layer, digits_update_proc);
   layer_add_child(window_layer, s_digits_layer);
+  layer_set_update_proc(s_digits_layer, digits_update_proc);
   
   text_hour1_layer = text_layer_create(GRect(4, -12, 48, 66));
   text_layer_set_text_color(text_hour1_layer, GColorWhite);
@@ -376,16 +439,18 @@ void handle_init(void) {
   }
   
   // Setup messaging
-  const int inbound_size = 64;
-  const int outbound_size = 64;
+  const int inbound_size = 96;
+  const int outbound_size = 96;
   app_message_open(inbound_size, outbound_size);
   
   Tuplet initial_values[] = {
-    TupletInteger(WEATHER_ICON_KEY, 15),
-    TupletCString(WEATHER_TEMPERATURE_KEY, ""),
+    TupletInteger(WEATHER_ICON_KEY, weather_icon),
+    TupletCString(WEATHER_TEMPERATURE_KEY, weather_temp),
     TupletCString(SHAKE_KEY, boolToString(shake)),
     TupletCString(ANALOG_KEY, boolToString(analog)),
-    TupletCString(INVERT_STRIP_KEY, boolToString(strip))
+    TupletCString(INVERT_STRIP_KEY, boolToString(strip)),
+    TupletCString(UPDATE_NOW, "false"),
+    TupletInteger(UPDATE_TIME_KEY, update_time)
   };
 
   app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values,
@@ -415,9 +480,16 @@ void handle_deinit(void) {
     accel_tap_service_unsubscribe();
   }  
   
+  app_sync_deinit(&sync);
+  
   persist_write_bool(ANALOG_KEY, analog);
   persist_write_bool(SHAKE_KEY, shake);
   persist_write_bool(INVERT_STRIP_KEY, strip);
+  //persist_write_int(WEATHER_ICON_KEY, weather_icon);
+  //APP_LOG(0, "temp before persist set: %s", weather_temp);
+  //persist_write_string(WEATHER_TEMPERATURE_KEY, weather_temp);
+  persist_write_int(LAST_UPDATE_TIME, weather_timestamp);
+  persist_write_int(UPDATE_TIME_KEY, update_time);
   
   fonts_unload_custom_font(meteocons);
   fonts_unload_custom_font(imagine_15);

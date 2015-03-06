@@ -74,14 +74,14 @@ var options = JSON.parse(localStorage.getItem('options'));
 if (options === null || Object.keys(options).length < 7) options = { "use_gps" : "true",
                                   "location" : "",
                                   "units" : "celcius",
-                                  "update_time" : "60",
+                                  "updatetime" : "60",
                                   "shake" : "true",
                                   "analog" : "false",                                 
                                   "strip" : "true"};
 //console.log("options length="+Object.keys(options).length);
 
 var weather = JSON.parse(localStorage.getItem('weather'));
-if(weather === null) weather = {icon: NA, temperature: "", timestamp: 0};
+if(weather === null) weather = {icon: NA, temperature: ""};
 
 function getWeatherFromLatLong(latitude, longitude) {
   var response;
@@ -153,11 +153,11 @@ function getWeatherFromWoeid(woeid) {
           // console.log("condition " + condition.text);
           weather.icon = icon;
           weather.temperature = temperature;
-          weather.timestamp = Math.floor(Date.now() / 1000);
           localStorage.setItem('weather', JSON.stringify(weather));
           Pebble.sendAppMessage({
             "icon" : icon,
-            "temperature" : temperature
+            "temperature" : temperature,
+            "updatenow" : "true"
           });
         }
       } else {
@@ -188,7 +188,8 @@ function locationError(err) {
   console.warn('location error (' + err.code + '): ' + err.message);
   Pebble.sendAppMessage({
     "icon": GPS,
-    "temperature": "X"
+    "temperature": "X",
+    "updatenow" : "true"
   });
 }
 
@@ -214,8 +215,10 @@ Pebble.addEventListener('webviewclosed', function(e) {
     Pebble.sendAppMessage({
             "shake" : options.shake,
             "analog" : options.analog,
-            "strip" : options.strip
+            "strip" : options.strip,
+            "updatetime" : options.update_time
           });
+    //console.log("update_time:" + options.update_time);
     updateWeather();
   } else {
     //console.log('no options received');
@@ -224,7 +227,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
 
 Pebble.addEventListener("ready", function(e) {
   //console.log("connect!" + e.ready);
-  if (weather.timestamp < Math.floor(Date.now() / 1000) - parseInt(options.update_time)*60/2 || weather.icon === NA || weather.icon === GPS || weather.temperature ==="") {
+  /*if (weather.timestamp < Math.floor(Date.now() / 1000) - parseInt(options.update_time)*60/2 || weather.icon === NA || weather.icon === GPS || weather.temperature ==="") {
     updateWeather();    
   }
   else {
@@ -237,5 +240,22 @@ Pebble.addEventListener("ready", function(e) {
     //console.log("timer fired");
     updateWeather();
   }, parseInt(options.update_time)*60*1000); // 30 minutes
-  console.log(e.type);
+  console.log(e.type);*/
+  if(weather.icon === NA) {
+    updateWeather();
+  }
+  else {
+    Pebble.sendAppMessage({
+            "icon" : weather.icon,
+            "temperature" : weather.temperature,
+            "updatenow" : "false"
+          });
+  }  
+});
+
+Pebble.addEventListener("appmessage", function(e) {
+  if(e.payload.updatenow === "false") {
+    //console.log("msg received");
+    updateWeather();
+  }
 });
