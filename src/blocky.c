@@ -33,7 +33,7 @@ GFont imagine_58;
 bool analog = false;
 bool shake = true;
 bool strip = true;
-int update_time = 60;
+int update_time = 30;
 static int yday = -1;
 
 InverterLayer *inverter_strip = NULL;
@@ -49,7 +49,7 @@ static char date_text[] = "00";
 static char day_text[] = "xxx";
 static char month_text[] = "xxx";
 static int weather_icon = 15;
-static char *weather_temp = "0";
+static char weather_temp[] = "";
 static int weather_timestamp = 0;
 
 TextLayer *battery_text_layer;
@@ -59,10 +59,6 @@ static uint8_t sync_buffer[96];
 
 char* boolToString(bool b) {
   return b == true ? "true" : "false";
-}
-
-int boolToInt(bool b) {
-  return b == true ? 1 : 0;
 }
 
 void bluetooth_connection_changed(bool connected) {
@@ -147,7 +143,7 @@ static void digits_update_proc(Layer *layer, GContext *ctx) {
     time_format = "%I:%M";
   }
   
-  char* time_text_old = NULL;
+  char time_text_old[10] = "";
   strcpy(time_text_old, time_text);
   strftime(time_text, sizeof(time_text), time_format, t);
     
@@ -200,11 +196,12 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   }
   
   int time_now = tick_time->tm_mday*24*60 + tick_time->tm_hour*60 + tick_time->tm_min;
-  //APP_LOG(0, "time_now: %d", time_now);
-  //APP_LOG(0, "weather_timestamp: %d", weather_timestamp);
+  /*APP_LOG(0, "time_now: %d", time_now);
+  APP_LOG(0, "weather_timestamp: %d", weather_timestamp);
+  APP_LOG(0, "update_time: %d", update_time);
+  APP_LOG(0, "weather_icon: %d", weather_icon);
+  APP_LOG(0, "weather_temp: %s", weather_temp);*/
   //APP_LOG(0, "update_time: %d", update_time);
-  //APP_LOG(0, "weather_icon: %d", weather_icon);
-  //APP_LOG(0, "weather_temp: %s", weather_temp);
   if(time_now - weather_timestamp > update_time || time_now < weather_timestamp || strcmp(weather_temp, "") == 0 || weather_icon > 12){
   //if(time_now - weather_timestamp > 30 || time_now < weather_timestamp || weather_icon > 12){    
     Tuplet new_values[] = {
@@ -238,8 +235,8 @@ static void sync_tuple_changed_callback(const uint32_t key,
       break;
 
     case WEATHER_TEMPERATURE_KEY:
-      //APP_LOG(0, "IN WEATHER TEMPERATURE KEY");
-      if(strcmp(weather_temp, new_tuple->value->cstring) != 0) {
+      //APP_LOG(0, "IN WEATHER TEMPERATURE KEY:%s", weather_temp);
+      if(strcmp(weather_temp, new_tuple->value->cstring) != 0 && strcmp(new_tuple->value->cstring, "") != 0) {
         strcpy(weather_temp, new_tuple->value->cstring);
         text_layer_set_text(text_temp_layer, weather_temp);
       }      
@@ -274,10 +271,10 @@ static void sync_tuple_changed_callback(const uint32_t key,
       }      
       break;
       
-    case UPDATE_TIME_KEY:
-      //APP_LOG(0, "IN UPDATE TIME KEY");
-      update_time = new_tuple->value->uint8;
-      break;
+    /*case UPDATE_TIME_KEY:
+      APP_LOG(0, "IN UPDATE TIME KEY:%d",atoi(new_tuple->value->cstring));
+      update_time = atoi(new_tuple->value->cstring);
+      break;*/
     
     case UPDATE_NOW:
       //APP_LOG(0, "IN UPDATE NOW: %s", new_tuple->value->cstring);
@@ -297,9 +294,9 @@ void handle_init(void) {
   if(persist_exists(WEATHER_TEMPERATURE_KEY)) {
     persist_read_string(WEATHER_TEMPERATURE_KEY, weather_temp, sizeof(weather_temp));
   }*/
-  //APP_LOG(0, "temp after persist get: %s", weather_temp);
+  //APP_LOG(0, "update time after persist get: %d", update_time);
   weather_timestamp = persist_exists(LAST_UPDATE_TIME) ? persist_read_int(LAST_UPDATE_TIME) : 0;
-  update_time = persist_exists(UPDATE_TIME_KEY) ? persist_read_int(UPDATE_TIME_KEY) : 60;
+  //update_time = persist_exists(UPDATE_TIME_KEY) ? persist_read_int(UPDATE_TIME_KEY) : 60;
   
   window = window_create();
   window_stack_push(window, true /* Animated */);
@@ -441,16 +438,19 @@ void handle_init(void) {
   // Setup messaging
   const int inbound_size = 96;
   const int outbound_size = 96;
+  /*char *upd_time = "";
+  snprintf(upd_time, 4, "%d", update_time);
+  APP_LOG(0, "update time to string:%s", upd_time);*/
   app_message_open(inbound_size, outbound_size);
   
   Tuplet initial_values[] = {
     TupletInteger(WEATHER_ICON_KEY, weather_icon),
-    TupletCString(WEATHER_TEMPERATURE_KEY, weather_temp),
+    TupletCString(WEATHER_TEMPERATURE_KEY, ""),
     TupletCString(SHAKE_KEY, boolToString(shake)),
     TupletCString(ANALOG_KEY, boolToString(analog)),
     TupletCString(INVERT_STRIP_KEY, boolToString(strip)),
-    TupletCString(UPDATE_NOW, "false"),
-    TupletInteger(UPDATE_TIME_KEY, update_time)
+    TupletCString(UPDATE_NOW, "false")
+    //TupletCString(UPDATE_TIME_KEY, upd_time)
   };
 
   app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values,
@@ -486,10 +486,10 @@ void handle_deinit(void) {
   persist_write_bool(SHAKE_KEY, shake);
   persist_write_bool(INVERT_STRIP_KEY, strip);
   //persist_write_int(WEATHER_ICON_KEY, weather_icon);
-  //APP_LOG(0, "temp before persist set: %s", weather_temp);
+  //APP_LOG(0, "update time before persist set: %d", update_time);
   //persist_write_string(WEATHER_TEMPERATURE_KEY, weather_temp);
   persist_write_int(LAST_UPDATE_TIME, weather_timestamp);
-  persist_write_int(UPDATE_TIME_KEY, update_time);
+  //persist_write_int(UPDATE_TIME_KEY, update_time);
   
   fonts_unload_custom_font(meteocons);
   fonts_unload_custom_font(imagine_15);

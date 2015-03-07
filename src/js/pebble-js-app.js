@@ -74,7 +74,7 @@ var options = JSON.parse(localStorage.getItem('options'));
 if (options === null || Object.keys(options).length < 7) options = { "use_gps" : "true",
                                   "location" : "",
                                   "units" : "celcius",
-                                  "updatetime" : "60",
+                                  //"updatetime" : "60",
                                   "shake" : "true",
                                   "analog" : "false",                                 
                                   "strip" : "true"};
@@ -176,7 +176,7 @@ function updateWeather() {
   } else {
     getWeatherFromLocation(options.location);
   }
-  //console.log("weather updated");
+  console.log("weather updated");
 }
 
 function locationSuccess(pos) {
@@ -198,7 +198,7 @@ Pebble.addEventListener('showConfiguration', function(e) {
     'use_gps=' + encodeURIComponent(options.use_gps) +
     '&location=' + encodeURIComponent(options.location) +
     '&units=' + encodeURIComponent(options.units) +
-    '&update_time=' + encodeURIComponent(options.update_time) +
+    //'&update_time=' + encodeURIComponent(options.update_time) +
     '&shake=' + encodeURIComponent(options.shake) +
     '&analog=' + encodeURIComponent(options.analog) +
     '&strip=' + encodeURIComponent(options.strip);
@@ -216,7 +216,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
             "shake" : options.shake,
             "analog" : options.analog,
             "strip" : options.strip,
-            "updatetime" : options.update_time
+            //"updatetime" : options.update_time
           });
     //console.log("update_time:" + options.update_time);
     updateWeather();
@@ -250,7 +250,8 @@ Pebble.addEventListener("ready", function(e) {
             "temperature" : weather.temperature,
             "updatenow" : "false"
           });
-  }  
+    //console.log("temp:"+weather.temperature);
+  }
 });
 
 Pebble.addEventListener("appmessage", function(e) {
