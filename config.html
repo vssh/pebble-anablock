@@ -58,7 +58,7 @@
           </select>
         </div>
         
-        <div data-role="fieldcontain">
+        <!--<div data-role="fieldcontain">
           <fieldset data-role="controlgroup" data-type="horizontal">
             <legend>Face (when shake to switch is disabled):</legend>
 
@@ -68,7 +68,7 @@
             <label for="analog">Analog</label>
             <input type="radio" id="analog" name="face" value="true" data-theme="c">
           </fieldset>
-        </div>
+        </div>-->
         
         <div data-role="fieldcontain">
           <label for="strip">Show inverter strip</label>
@@ -106,7 +106,7 @@
           'units': $('input:radio[name=units]:checked').val(),
           //'update_time' : $('#update_time').val(),
           'shake': $('#shake').val(),
-          'analog': $('input:radio[name=face]:checked').val(),
+          //'analog': $('input:radio[name=face]:checked').val(),
           'strip' : $('#strip').val()
         }
         return options;
@@ -135,7 +135,7 @@
         
         //$('#update_time').val(getQueryVariable('update_time'));
         $('#shake').val(getQueryVariable('shake')).change();
-        if (getQueryVariable('analog') == "true") {
+        /*if (getQueryVariable('analog') == "true") {
           $('input:radio[name=face][value=true]').prop('checked', true).trigger("click");
         } else {
           $('input:radio[name=face][value=false]').prop('checked', true).trigger("click");
@@ -143,10 +143,10 @@
         // Disable face field based on shake toggle
         $('#digital').prop('disabled', $('#shake').val() == "true");
         $('#analog').prop('disabled', $('#shake').val() == "true");
-        $('#shake').change(function() {
+        ('#shake').change(function() {
           $('#digital').prop('disabled', $('#shake').val() == "true");
           $('#analog').prop('disabled', $('#shake').val() == "true");
-        });
+        });*/
         $('#strip').val(getQueryVariable('strip')).change();
       });
     </script>
