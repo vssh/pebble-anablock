@@ -45,10 +45,10 @@
           </fieldset>
         </div>
         
-        <div data-role="fieldcontain">
+        <!--<div data-role="fieldcontain">
           <label for="update_time">Update time in minutes</label>
           <input type="number" name="update_time" id="update_time" value="" />
-        </div>
+        </div>-->
 
         <div data-role="fieldcontain">
           <label for="shake">Shake to swich between digital and analog</label>
@@ -104,7 +104,7 @@
           'use_gps': $('#gps_switch').val(),
           'location': $('#location').val(),
           'units': $('input:radio[name=units]:checked').val(),
-          'update_time' : $('#update_time').val(),
+          //'update_time' : $('#update_time').val(),
           'shake': $('#shake').val(),
           'analog': $('input:radio[name=face]:checked').val(),
           'strip' : $('#strip').val()
@@ -133,7 +133,7 @@
           $('#location').prop('disabled', $('#gps_switch').val() == "true");
         });
         
-        $('#update_time').val(getQueryVariable('update_time'));
+        //$('#update_time').val(getQueryVariable('update_time'));
         $('#shake').val(getQueryVariable('shake')).change();
         if (getQueryVariable('analog') == "true") {
           $('input:radio[name=face][value=true]').prop('checked', true).trigger("click");
