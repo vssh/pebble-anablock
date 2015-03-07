@@ -73,7 +73,7 @@ var options = JSON.parse(localStorage.getItem('options'));
 //console.log('read options: ' + JSON.stringify(options));
 if (options === null || Object.keys(options).length < 7) options = { "use_gps" : "true",
                                   "location" : "",
-                                  "units" : "celcius",
+                                  "units" : "celsius",
                                   //"updatetime" : "60",
                                   "shake" : "true",
                                   "analog" : "false",                                 
@@ -132,6 +132,7 @@ function getWeatherFromLocation(location_name) {
 }
 
 function getWeatherFromWoeid(woeid) {
+  //console.log(options.units);
   var celsius = options.units == 'celsius';
   var query = encodeURI("select item.condition from weather.forecast where woeid = " + woeid +
                         " and u = " + (celsius ? "\"c\"" : "\"f\""));
@@ -176,7 +177,7 @@ function updateWeather() {
   } else {
     getWeatherFromLocation(options.location);
   }
-  console.log("weather updated");
+  //console.log("weather updated");
 }
 
 function locationSuccess(pos) {
@@ -211,7 +212,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
   if (e.response) {
     options = JSON.parse(decodeURIComponent(e.response));
     localStorage.setItem('options', JSON.stringify(options));
-    console.log('storing options: ' + JSON.stringify(options));
+    //console.log('storing options: ' + JSON.stringify(options));
     Pebble.sendAppMessage({
             "shake" : options.shake,
             "analog" : options.analog,

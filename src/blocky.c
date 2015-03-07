@@ -201,7 +201,6 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   APP_LOG(0, "update_time: %d", update_time);
   APP_LOG(0, "weather_icon: %d", weather_icon);
   APP_LOG(0, "weather_temp: %s", weather_temp);*/
-  //APP_LOG(0, "update_time: %d", update_time);
   if(time_now - weather_timestamp > update_time || time_now < weather_timestamp || strcmp(weather_temp, "") == 0 || weather_icon > 12){
   //if(time_now - weather_timestamp > 30 || time_now < weather_timestamp || weather_icon > 12){    
     Tuplet new_values[] = {
