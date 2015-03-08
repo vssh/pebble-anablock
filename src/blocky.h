@@ -20,7 +20,7 @@ static const GPathInfo HOUR_HAND_POINTS = {
 };
 
 static const char *WEATHER_ICONS[] = {
-  "\\", "]", "F", "G", "^", "_", "M", "`", "c", "g", "h", "i", "j", "m","l", ""};
+  "", "\\", "]", "F", "G", "^", "_", "M", "`", "c", "g", "h", "i", "j", "m","l", ""};
 
 enum WeatherKey {
   WEATHER_ICON_KEY = 0x0,         // TUPLE_INT

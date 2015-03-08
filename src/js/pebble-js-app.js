@@ -1,19 +1,20 @@
-var CLEAR_DAY = 0;
-var CLEAR_NIGHT = 1;
-var WINDY = 2;
-var COLD = 3;
-var PARTLY_CLOUDY_DAY = 4;
-var PARTLY_CLOUDY_NIGHT = 5;
-var HAZE = 6;
-var CLOUD = 7;
-var RAIN = 8;
-var SNOW = 9;
-var HAIL = 10;
-var CLOUDY = 11;
-var STORM = 12;
-var NA = 13;
-var GPS = 14;
-var BLANK = 15;
+var UNDEFINED = 0;
+var CLEAR_DAY = 1;
+var CLEAR_NIGHT = 2;
+var WINDY = 3;
+var COLD = 4;
+var PARTLY_CLOUDY_DAY = 5;
+var PARTLY_CLOUDY_NIGHT = 6;
+var HAZE = 7;
+var CLOUD = 8;
+var RAIN = 9;
+var SNOW = 10;
+var HAIL = 11;
+var CLOUDY = 12;
+var STORM = 13;
+var NA = 14;
+var GPS = 15;
+var BLANK = 16;
 
 var imageId = {
   0 : STORM, //tornado
@@ -71,13 +72,16 @@ var locationOptions = { "timeout": 15000, "maximumAge": 60000 };
 
 var options = JSON.parse(localStorage.getItem('options'));
 //console.log('read options: ' + JSON.stringify(options));
-if (options === null || Object.keys(options).length < 7) options = { "use_gps" : "true",
-                                  "location" : "",
-                                  "units" : "celsius",
-                                  //"updatetime" : "60",
-                                  "shake" : "true",
-                                  "analog" : "false",                                 
-                                  "strip" : "true"};
+
+var optionsBackup = { "use_gps" : "true",
+                      "location" : "",
+                      "units" : "celsius",
+                      //"updatetime" : "60",
+                      "shake" : "true",
+                      //"analog" : "false",                                 
+                      "strip" : "true"};
+
+if (options === null || Object.keys(options).length < Object.keys(optionsBackup).length) options = optionsBackup;
 //console.log("options length="+Object.keys(options).length);
 
 var weather = JSON.parse(localStorage.getItem('weather'));
@@ -201,7 +205,7 @@ Pebble.addEventListener('showConfiguration', function(e) {
     '&units=' + encodeURIComponent(options.units) +
     //'&update_time=' + encodeURIComponent(options.update_time) +
     '&shake=' + encodeURIComponent(options.shake) +
-    '&analog=' + encodeURIComponent(options.analog) +
+    //'&analog=' + encodeURIComponent(options.analog) +
     '&strip=' + encodeURIComponent(options.strip);
   //console.log('showing configuration at uri: ' + uri);
 
@@ -215,8 +219,8 @@ Pebble.addEventListener('webviewclosed', function(e) {
     //console.log('storing options: ' + JSON.stringify(options));
     Pebble.sendAppMessage({
             "shake" : options.shake,
-            "analog" : options.analog,
-            "strip" : options.strip,
+            //"analog" : options.analog,
+            "strip" : options.strip
             //"updatetime" : options.update_time
           });
     //console.log("update_time:" + options.update_time);

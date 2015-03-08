@@ -33,7 +33,7 @@ GFont imagine_58;
 bool analog = false;
 bool shake = true;
 bool strip = true;
-int update_time = 30;
+int update_time = 60;
 static int yday = -1;
 
 InverterLayer *inverter_strip = NULL;
@@ -48,7 +48,7 @@ static char date2[] = "0";
 static char date_text[] = "00";
 static char day_text[] = "xxx";
 static char month_text[] = "xxx";
-static int weather_icon = 15;
+static int weather_icon = 0;
 static char weather_temp[] = "";
 static int weather_timestamp = 0;
 
@@ -201,7 +201,7 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   APP_LOG(0, "update_time: %d", update_time);
   APP_LOG(0, "weather_icon: %d", weather_icon);
   APP_LOG(0, "weather_temp: %s", weather_temp);*/
-  if(time_now - weather_timestamp > update_time || time_now < weather_timestamp || strcmp(weather_temp, "") == 0 || weather_icon > 12){
+  if(time_now - weather_timestamp > update_time || time_now < weather_timestamp || weather_icon > 12){
   //if(time_now - weather_timestamp > 30 || time_now < weather_timestamp || weather_icon > 12){    
     Tuplet new_values[] = {
       TupletCString(UPDATE_NOW, boolToString(false))
@@ -249,11 +249,11 @@ static void sync_tuple_changed_callback(const uint32_t key,
       }
       break;
     
-    case ANALOG_KEY:
-      //APP_LOG(0, "IN ANALOG KEY");
+    /*case ANALOG_KEY:
+      APP_LOG(0, "IN ANALOG KEY");
       analog = strcmp(new_tuple->value->cstring, "true") == 0 ? true : false;
       switch_analog_digital();
-      break;
+      break;*/
     
     case INVERT_STRIP_KEY:
       //APP_LOG(0, "IN INVERT STRIP KEY");
@@ -446,7 +446,7 @@ void handle_init(void) {
     TupletInteger(WEATHER_ICON_KEY, weather_icon),
     TupletCString(WEATHER_TEMPERATURE_KEY, ""),
     TupletCString(SHAKE_KEY, boolToString(shake)),
-    TupletCString(ANALOG_KEY, boolToString(analog)),
+    //TupletCString(ANALOG_KEY, boolToString(analog)),
     TupletCString(INVERT_STRIP_KEY, boolToString(strip)),
     TupletCString(UPDATE_NOW, "false")
     //TupletCString(UPDATE_TIME_KEY, upd_time)
