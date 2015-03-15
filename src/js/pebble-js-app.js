@@ -246,7 +246,7 @@ Pebble.addEventListener("ready", function(e) {
     updateWeather();
   }, parseInt(options.update_time)*60*1000); // 30 minutes
   console.log(e.type);*/
-  if(weather.icon === NA) {
+  /*if(weather.icon === NA) {
     updateWeather();
   }
   else {
@@ -256,7 +256,7 @@ Pebble.addEventListener("ready", function(e) {
             "updatenow" : "false"
           });
     //console.log("temp:"+weather.temperature);
-  }
+  }*/
 });
 
 Pebble.addEventListener("appmessage", function(e) {

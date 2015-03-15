@@ -3,19 +3,19 @@
 
 static const GPathInfo MINUTE_HAND_POINTS = {
   4, (GPoint []) {
-    {-3, 0},
-    {3, 0},
-    {3, -60},
-    {-3, -60}
+    {-4, 4},
+    {4, 4},
+    {2, -60},
+    {-2, -60}
   }
   };
 
 static const GPathInfo HOUR_HAND_POINTS = {
   4, (GPoint []){
-    {-4, 0},
-    {4, 0},
-    {4, -40},
-    {-4, -40}
+    {-4, 4},
+    {4, 4},
+    {2, -40},
+    {-2, -40}
   }
 };
 
